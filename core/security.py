@@ -1,15 +1,15 @@
 import jwt  # Importar desde PyJWT
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from app.api.v1 import models
-
+from fastapi.security import OAuth2PasswordBearer
 # Configuración
 SECRET_KEY = "your_secret_key"  # Cambia esto por una clave secreta segura
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # Inicializar el contexto para la contraseña
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -32,7 +32,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 # Función para decodificar el token y obtener el usuario actual
-def get_current_user(token: str):
+def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -43,7 +43,7 @@ def get_current_user(token: str):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        return username  # O puedes retornar el usuario de la base de datos aquí
+        return username
     except jwt.PyJWTError:
         raise credentials_exception
 
