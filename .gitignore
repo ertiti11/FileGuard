@@ -1,1 +1,4 @@
 /__pycache__
+
+#quitar todos los __pycache de los directorios
+__pycache__/
